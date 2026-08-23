@@ -1,6 +1,7 @@
-#include<iostream>
+#include"Point.h"
 
-void eat() {
-	std::cout << "well";
-	return;
+Point::Point(int x, int y) :x(x), y(y) {}
+
+bool Point::operator==(const Point& other) const {
+	return x == other.x && y == other.y;
 }
