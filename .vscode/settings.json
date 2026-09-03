@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/*.sln": true,
+        "**/*.vcxproj": true,
+        "**/*.vcxproj.filters": true,
+        "**/*.vcxproj.user": true,
+        "**/x64/": true,
+        "**/Debug/": true,
+        "**/Release/": true,
+        "**/*.exe": true
+    },
+    "terminal.integrated.env.windows": {
+        
+    },
+    "[cpp]": {
+        "editor.formatOnSave": true
+    },
+    "[c]": {
+        "editor.formatOnSave": true
+    }
+}
