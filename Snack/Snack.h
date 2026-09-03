@@ -1,19 +1,28 @@
 #pragma once
 #include <deque>
-#include"Point.h"
+#include "Point.h"
 
-class Snack {
+enum class Direction
+{
+	Up = 0,
+	Right = 1,
+	Down = 2,
+	Left = 3
+};
+
+class Snack
+{
 private:
 	std::deque<Point> m_body;
-	int m_direction;
+	Direction m_direction;
 	bool m_isGrow;
 
 public:
 	Snack(int startX, int startY);
 	void move();
 	void grow();
-	bool isHeadAt(const Point& pos) const;
+	bool isHeadAt(const Point &pos) const;
 
-	const std::deque<Point>& getBody() const;
-	int getDirection() const;
+	const std::deque<Point> &getBody() const;
+	Direction getDirection() const;
 };
