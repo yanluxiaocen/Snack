@@ -50,3 +50,30 @@ void Snack::grow()
 {
     m_isGrow = true;
 }
+
+void Snack::setDirection(Direction d)
+{
+    if (m_body.size() > 1)
+    {
+        switch (d)
+        {
+        case Direction::Up:
+            if (m_direction == Direction::Down)
+                return;
+            break;
+        case Direction::Down:
+            if (m_direction == Direction::Up)
+                return;
+            break;
+        case Direction::Left:
+            if (m_direction == Direction::Right)
+                return;
+            break;
+        case Direction::Right:
+            if (m_direction == Direction::Left)
+                return;
+            break;
+        }
+    }
+    m_direction = d;
+}

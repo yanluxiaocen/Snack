@@ -25,4 +25,5 @@ public:
 
 	const std::deque<Point> &getBody() const;
 	Direction getDirection() const;
+	void setDirection(Direction d);
 };

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Snack.h"
 #include <windows.h>
+#include <conio.h>
 
 using namespace std;
 
@@ -9,35 +10,47 @@ int main()
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);
 
-	Snack snake(3, 5); // 从 (3,5) 出发
+	Snack snack(5, 5);
 
-	cout << "body size   = " << snake.getBody().size() << "  (期望 1)" << endl;
+	while (true)
+	{
+		int ch = _getch();
+		if (ch == 0 || ch == 224)
+			ch = _getch();
+		Direction dir = Direction::Up;
+		switch (ch)
+		{
+		case 'w':
+		case 'W':
+		case 72:
+			dir = Direction::Up;
+			break;
+		case 's':
+		case 'S':
+		case 80:
+			dir = Direction::Down;
+			break;
+		case 'a':
+		case 'A':
+		case 75:
+			dir = Direction::Left;
+			break;
+		case 'd':
+		case 'D':
+		case 77:
+			dir = Direction::Right;
+			break;
+		case 'q':
+		case 'Q':
+			return 0;
+		default:
+			continue;
+		}
 
-	cout << boolalpha; // 让 bool 打印成 true/false 而不是 1/0
-	cout << "head (3,5)? = " << snake.isHeadAt(Point(3, 5)) << "  (期望 true)" << endl;
-	cout << "head (0,0)? = " << snake.isHeadAt(Point(0, 0)) << "  (期望 false)" << endl;
+		snack.setDirection(dir);
+		snack.move();
+		cout << "头=(" << snack.getBody().front().x << "," << snack.getBody().front().y << ") 长度=" << snack.getBody().size() << endl;
+	}
 
-	cout << "direction   = " << static_cast<int>(snake.getDirection()) << "  (期望 0)" << endl;
-
-	const auto &body = snake.getBody(); // 拿常引用，验证不拷贝
-	cout << "body[0]     = (" << body.front().x << ", " << body.front().y << ")  (期望 (3, 5))" << endl;
-
-	// ===== move() / grow() 验证 =====
-	snake.move(); // 不成长：正常滑动
-	cout << "move 后：头=(" << snake.getBody().front().x << "," << snake.getBody().front().y
-		 << ") 长度=" << snake.getBody().size() << "  (期望 头=(3,4) 长度=1)" << endl;
-
-	snake.grow(); // 打成长标记
-	snake.move(); // 消化标记：不弹尾
-	cout << "成长后：头=(" << snake.getBody().front().x << "," << snake.getBody().front().y
-		 << ") 长度=" << snake.getBody().size() << "  (期望 头=(3,3) 长度=2)" << endl;
-	cout << "成长后：尾=(" << snake.getBody().back().x << "," << snake.getBody().back().y
-		 << ")  (期望 (3,4))" << endl;
-
-	snake.move(); // 标记已消化，恢复滑动
-	cout << "再移动：头=(" << snake.getBody().front().x << "," << snake.getBody().front().y
-		 << ") 长度=" << snake.getBody().size() << "  (期望 头=(3,2) 长度=2)" << endl;
-
-	cin.get();
 	return 0;
 }
