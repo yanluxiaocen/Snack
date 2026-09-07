@@ -31,13 +31,14 @@
 - [x] **MSVC 中文乱码修复**：Snack.vcxproj 配置 /utf-8 后 F5 输出中文正常（SetConsoleOutputCP 只解决运行期，编译期编码靠 /utf-8）
 - [x] **UI 职责拆分**（本机编译通过、exe 已构建）：draw() 移入新建 UI.h/UI.cpp（含 constexpr PLAY_WIDTH=20 / PLAY_HEIGHT=10 尺寸常量，main 共享），main.cpp 只留游戏循环 main
 - [x] **控制台雏形第一块**（本机编译通过、exe 已构建）：地图边框渲染（grid 二维缓冲 + 三元运算符画边框 #、蛇身 o / 蛇头 @）+ 自动移动循环（_kbhit() 轮询不阻塞 + Sleep 150ms 帧间隔）+ 撞墙 Game Over（头出活动区即死，防 grid 越界写）
+- [x] **主力机交接完成（2026-09-07）**：git pull 拿到 UI 拆分代码；Snack.vcxproj 已添加 UI.cpp / UI.h；F5 实测正常（蛇自动移动、WASD/方向键转向、撞墙退出）——两机行为一致
 
 ### 待办（下次严格按此顺序）
-- [ ] **主力机（VS2022）交接三件事**：① git pull 拿 UI 拆分代码 ② Snack.vcxproj 添加 UI.cpp / UI.h（否则链接报 undefined reference to draw()）③ 顺手确认 Release 配置也加了 /utf-8（Debug 已配）
-- [ ] 食物 + 计分：随机生成不压蛇身的食物（画在 grid 上）→ 头吃到食物 → grow() + 分数 +1 → 生成新食物
+- [ ] 食物 + 计分：随机生成不压蛇身的食物（画在 grid 上）→ 头吃到食物 → grow() + 分数 +1 → 生成新食物（计划在 VSCode 机做）
 - [ ] 自撞判定 + 重开：新头咬到身体即 Game Over（长度>1 时即将移走的尾格不算撞）→ 结束后按 R 再来一局
 - [ ] 工程化：编码统一 → 日志 → CMake → 单元测试（把当年删掉的 main 自测正式化）→ README（参考 Anime_Archive_Z 已验证流程）
 - [ ] 可选加分：SFML 图形版（游戏循环/事件/碰撞/存档）
+- [ ] （主力机小尾巴）确认 Release 配置也加了 /utf-8——Debug 已配并实测正常，Release 当时没确认
 
 ## 关键决定记录
 - 远程用 HTTPS：22 端口被墙，SSH 不可用
