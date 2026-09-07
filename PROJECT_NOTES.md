@@ -3,7 +3,7 @@
 > 本文件是"跨设备共享记忆"：每台电脑/每个账户开工前先读它，收工后更新它，然后提交推送到 GitHub。
 
 ## 一句话简介
-控制台贪吃蛇（C++ / STL，VS 工程 Snack.sln + VSCode MinGW 双构建，简历向项目）。Snack 类 7 方法实现 + 键盘操控 demo（WASD + 方向键）已在双机实机验收通过、中文输出正常；控制台完整版（地图/食物/碰撞/计分）未开始。
+控制台贪吃蛇（C++ / STL，VS 工程 Snack.sln + VSCode MinGW 双构建，简历向项目）。Snack 类 7 方法实现 + 键盘操控 demo（WASD + 方向键）已在双机实机验收通过、中文输出正常；控制台完整版进行中：地图渲染 + 自动移动 + 撞墙已完成（UI 已拆分为 UI.h/UI.cpp），食物/计分/自撞未做。
 
 ## 协作约定
 - VS2022 主力机 + 另一台电脑（VSCode）经 GitHub 协作，远程已统一为 HTTPS（22 端口被墙，SSH 不可用，勿折腾）。
@@ -29,10 +29,13 @@
 - [x] **main.cpp 方向键 bug 已修**（`ch == 0 || ch == 224` 前缀判断 + `ch = _getch()` 赋值，代码核对确认）
 - [x] **键盘 demo 主力机实机验收通过（2026-09-03）**：WASD + 方向键均能控蛇、长度>1 时 180° 掉头被正确拒绝、Q 退出正常
 - [x] **MSVC 中文乱码修复**：Snack.vcxproj 配置 /utf-8 后 F5 输出中文正常（SetConsoleOutputCP 只解决运行期，编译期编码靠 /utf-8）
+- [x] **UI 职责拆分**（本机编译通过、exe 已构建）：draw() 移入新建 UI.h/UI.cpp（含 constexpr PLAY_WIDTH=20 / PLAY_HEIGHT=10 尺寸常量，main 共享），main.cpp 只留游戏循环 main
+- [x] **控制台雏形第一块**（本机编译通过、exe 已构建）：地图边框渲染（grid 二维缓冲 + 三元运算符画边框 #、蛇身 o / 蛇头 @）+ 自动移动循环（_kbhit() 轮询不阻塞 + Sleep 150ms 帧间隔）+ 撞墙 Game Over（头出活动区即死，防 grid 越界写）
 
 ### 待办（下次严格按此顺序）
-- [ ] **确认 Release 配置也加了 /utf-8**（Debug 已配，主力机 MSVC 中文正常；Release 没配的话以后编译中文会复发）
-- [ ] 控制台完整版：地图渲染（二维格子、行=y 列=x）→ 食物生成（随机、不与蛇身重叠）→ 自动移动（延时循环）→ 键盘方向（复用 demo 读取）→ 碰撞判定（撞墙/咬自己 → 结束）→ 计分（吃一个 +1）
+- [ ] **主力机（VS2022）交接三件事**：① git pull 拿 UI 拆分代码 ② Snack.vcxproj 添加 UI.cpp / UI.h（否则链接报 undefined reference to draw()）③ 顺手确认 Release 配置也加了 /utf-8（Debug 已配）
+- [ ] 食物 + 计分：随机生成不压蛇身的食物（画在 grid 上）→ 头吃到食物 → grow() + 分数 +1 → 生成新食物
+- [ ] 自撞判定 + 重开：新头咬到身体即 Game Over（长度>1 时即将移走的尾格不算撞）→ 结束后按 R 再来一局
 - [ ] 工程化：编码统一 → 日志 → CMake → 单元测试（把当年删掉的 main 自测正式化）→ README（参考 Anime_Archive_Z 已验证流程）
 - [ ] 可选加分：SFML 图形版（游戏循环/事件/碰撞/存档）
 
@@ -46,6 +49,7 @@
 - 键盘输入用 conio.h 的 `_getch()`（MinGW/MSVC 都有，无回车；cin 做不到实时游戏）
 - Windows 方向键是两字节：`_getch()` 先返回 0 或 224，再返回扫描码 72↑ 75← 77→ 80↓
 - 控制台坐标系：y 是行（向下增）、x 是列；"上"= y-1
+- UI 拆分为 UI.h/UI.cpp：draw() 只管画（grid 二维缓冲 + system("cls") 整帧重绘），main 只管循环/输入/规则；constexpr 尺寸常量放 UI.h 由两文件共享（头文件里的 constexpr 每个 .cpp 独立拷贝，无重复定义问题）
 - 踩坑库共享兄弟项目 Anime_Archive_Z（见下节），遇到类似问题直接引用
 
 ## 踩坑库（共享自 Anime_Archive_Z，教科书级，反复看）
@@ -63,6 +67,7 @@
 
 ## 常用命令备忘
 - 结束一天：更新本文件 → git add -A → git commit -m "docs: 更新项目日志" → git push
+- push/pull 前先开 Steam++ 加速（Anime 双机经验：浏览器能开 GitHub ≠ git 能连）；2026-09-04 本机 fetch 实测报 schannel SEC_E_NO_CREDENTIALS，若开加速仍报错 → 查 GCM 凭据/PAT
 - 新电脑首次拉取：git clone https://github.com/yanluxiaocen/Snack.git
 - 每日开工：git pull 拿到最新进度，先读 PROJECT_NOTES.md
 - VSCode 机编译/调试：打开仓库根目录，活动文件切到某个 .cpp，F5（tasks 会编译该目录下所有 .cpp 成 Snack.exe）
