@@ -3,7 +3,7 @@
 > 本文件是"跨设备共享记忆"：每台电脑/每个账户开工前先读它，收工后更新它，然后提交推送到 GitHub。
 
 ## 一句话简介
-控制台贪吃蛇（C++ / STL，VS 工程 Snack.sln + VSCode MinGW 双构建，简历向项目）。Snack 类 7 方法实现 + 键盘操控 demo（WASD + 方向键）已在双机实机验收通过、中文输出正常；控制台完整版进行中：地图渲染 + 自动移动 + 撞墙已完成（UI 已拆分为 UI.h/UI.cpp），食物/计分/自撞未做。
+控制台贪吃蛇（C++ / STL，VS 工程 Snack.sln + VSCode MinGW 双构建，简历向项目）。Snack 类 7 方法实现 + 键盘操控 demo 双机实机验收通过、中文输出正常；控制台完整版进行中：地图渲染 + 自动移动 + 撞墙 + **食物 + 计分**已完成（UI 已拆分为 UI.h/UI.cpp）；手感优化（不闪烁、按键防排队）与自撞判定待做。
 
 ## 协作约定
 - VS2022 主力机 + 另一台电脑（VSCode）经 GitHub 协作，远程已统一为 HTTPS（22 端口被墙，SSH 不可用，勿折腾）。
@@ -32,11 +32,15 @@
 - [x] **UI 职责拆分**（本机编译通过、exe 已构建）：draw() 移入新建 UI.h/UI.cpp（含 constexpr PLAY_WIDTH=20 / PLAY_HEIGHT=10 尺寸常量，main 共享），main.cpp 只留游戏循环 main
 - [x] **控制台雏形第一块**（本机编译通过、exe 已构建）：地图边框渲染（grid 二维缓冲 + 三元运算符画边框 #、蛇身 o / 蛇头 @）+ 自动移动循环（_kbhit() 轮询不阻塞 + Sleep 150ms 帧间隔）+ 撞墙 Game Over（头出活动区即死，防 grid 越界写）
 - [x] **主力机交接完成（2026-09-07）**：git pull 拿到 UI 拆分代码；Snack.vcxproj 已添加 UI.cpp / UI.h；F5 实测正常（蛇自动移动、WASD/方向键转向、撞墙退出）——两机行为一致
+- [x] **食物 + 计分完成（2026-09-08，VSCode 机）**：随机食物不压蛇身（do-while 重抽 + isOnSnake 过滤）；吃到 → grow() 标记 + 分数 +1 + 换新食物；draw 签名改为 (snake, food, score) 三处同步；撞墙显示最终得分。实机体验正常，顺带验证了长度>1 后 180° 掉头保护
 
 ### 待办（下次严格按此顺序）
-- [ ] 食物 + 计分：随机生成不压蛇身的食物（画在 grid 上）→ 头吃到食物 → grow() + 分数 +1 → 生成新食物（计划在 VSCode 机做）
+- [ ] **手感三件套**（2026-09-08 已诊断，改法已定稿）：
+  - ① 光标回位重绘替代 `system("cls")`：`SetConsoleCursorPosition` 回 (0,0) 覆盖画，消除每帧清屏闪烁（治"刷新率低"）
+  - ② 放大活动区：PLAY_WIDTH 20→32、PLAY_HEIGHT 10→16（可选，默认 80×25 窗口放得下）
+  - ③ 每帧只认最后一个按键：_kbhit 后用 do-while 清空排队键，防"松手后蛇还在自己转弯"（近墙转向不顺主因）
 - [ ] 自撞判定 + 重开：新头咬到身体即 Game Over（长度>1 时即将移走的尾格不算撞）→ 结束后按 R 再来一局
-- [ ] 工程化：编码统一 → 日志 → CMake → 单元测试（把当年删掉的 main 自测正式化）→ README（参考 Anime_Archive_Z 已验证流程）
+- [ ] 工程化：编码统一 → 日志 → CMake → 单元测试 → README（参考 Anime_Archive_Z 已验证流程；顺手把读键封装成函数、rand 换 <random>）
 - [ ] 可选加分：SFML 图形版（游戏循环/事件/碰撞/存档）
 - [ ] （主力机小尾巴）确认 Release 配置也加了 /utf-8——Debug 已配并实测正常，Release 当时没确认
 
@@ -65,6 +69,14 @@
 9. **想赋值却写成比较**：`ch == _getch()` 读走了键但没存 → 方向键全部"没反应"（本次 main.cpp 中招）
 10. **头文件声明了方法、.cpp 忘了写定义** → 编译全过、链接报 `undefined reference to Snack::xxx()`（grow() 那次"调试失败"真凶）
 11. Windows 控制台默认代码页 GBK：exe 里 UTF-8 中文输出会乱码，程序开头 SetConsoleOutputCP(CP_UTF8) 解决
+
+## 知识点地图（2026-09-08 小结，供复习/面试用，详细版在当天聊天里）
+**C++ 语言**：constexpr（类型化编译期常量，不用 #define——宏无类型/无作用域/不可调试）；enum class（作用域+强类型，打印用 static_cast）；声明 vs 定义（链接错误 undefined reference）；运算符重载 operator==；初始化列表按声明顺序；const 成员函数；const& 返回防拷贝（getBody）
+**STL**：std::deque 双端队列（front/back、push_front/pop_back 均 O(1)，选它因为蛇"头进尾出"）；范围 for 引用遍历；**引用失效规则**（move() 先拷贝 head 再动容器：pop 可能弹掉引用指向的元素、push_front 可能重分配）
+**语法细节**：switch 每个 case 要 break（fallthrough 静默错）；三元运算符 ?:（是表达式不是 lambda）；do-while 先做后查（生成食物"先抽再查"）；= 赋值 vs == 比较
+**Windows 控制台**：_getch 无回车读键；_kbhit 非阻塞轮询（实时游戏必须用）；方向键两字节（0/224 前缀 + 72↑ 75← 77→ 80↓）；Sleep 毫秒延时；system("cls") 清屏；SetConsoleOutputCP(CP_UTF8) 解决中文乱码
+**随机数**：rand 伪随机（LCG 确定性序列）→ srand(time(nullptr)) 播种；rand()%N+1 压范围（有微小取模偏差）；工程化换 <random>（mt19937 + uniform_int_distribution）
+**设计思想**：游戏主循环骨架（输入→更新→渲染→延时，所有游戏通用）；状态与显示分离（分数/食物在 main，UI 只读画）；成长标志"先标记、move 里消化"；规则按游戏状态分级（长度1 可掉头 / >1 禁止）；生成合法性过滤（食物不压蛇身）；增量开发每步有验收
 
 ## 常用命令备忘
 - 结束一天：更新本文件 → git add -A → git commit -m "docs: 更新项目日志" → git push

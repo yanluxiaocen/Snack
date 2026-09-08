@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void draw(const Snack &snake)
+void draw(const Snack &snake, const Point &food, int score)
 {
     char grid[PLAY_HEIGHT + 2][PLAY_WIDTH + 2];
     for (int y = 0; y < PLAY_HEIGHT + 2; ++y)
@@ -14,6 +14,8 @@ void draw(const Snack &snake)
     for (const Point &p : snake.getBody())
         grid[p.y][p.x] = 'o';
     grid[snake.getBody().front().y][snake.getBody().front().x] = '@';
+
+    grid[food.y][food.x] = '*';
 
     system("cls");
     cout << "WASD/方向键 转向 · Q 退出" << endl;
