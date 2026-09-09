@@ -1,6 +1,6 @@
 #include "UI.h"
 #include <iostream>
-#include <stdlib.h>
+#include <windows.h>
 
 using namespace std;
 
@@ -17,7 +17,9 @@ void draw(const Snack &snake, const Point &food, int score)
 
     grid[food.y][food.x] = '*';
 
-    system("cls");
+    COORD topLeft = {0, 0};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), topLeft);
+
     cout << "WASD/方向键 转向 · Q 退出" << endl;
     for (int y = 0; y < PLAY_HEIGHT + 2; ++y)
     {

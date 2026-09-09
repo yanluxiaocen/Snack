@@ -7,11 +7,13 @@
         "**/x64/": true,
         "**/Debug/": true,
         "**/Release/": true,
+        "**/build/": true,
         "**/*.exe": true
     },
     "terminal.integrated.env.windows": {
-        
+
     },
+    "cmake.cmakePath": "D:/Tool/CMake/cmake-4.4.3-windows-x86_64/bin/cmake.exe",
     "[cpp]": {
         "editor.formatOnSave": true
     },
