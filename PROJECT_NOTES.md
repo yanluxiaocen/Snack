@@ -3,7 +3,7 @@
 > 本文件是"跨设备共享记忆"：每台电脑/每个账户开工前先读它，收工后更新它，然后提交推送到 GitHub。
 
 ## 一句话简介
-控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环（自动移动/转向/成长/撞墙/自撞/计分/R 重开）+ 手感优化完成；工程化：目录拍平（src/include）、sln 退役、CMake 管线跑通、**doctest 单元测试接入（11 用例 / 16 断言全绿，ctest 通过）**；README 待做。
+控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环（自动移动/转向/成长/撞墙/自撞/计分/R 重开）+ 手感优化完成；**工程化四件套齐活**：目录拍平（src/include）→ sln 退役 → CMake 管线 → doctest 单测（11 用例 / 16 断言全绿）→ README。**图形版（SFML）路线待定**，见待办决策项。
 
 ## 协作约定
 - VS2022 主力机 + 另一台电脑（VSCode）经 GitHub 协作，远程已统一为 HTTPS（22 端口被墙，SSH 不可用，勿折腾）。
@@ -41,13 +41,17 @@
 - [x] **doctest 单元测试接入（2026-09-10）**：doctest.h 2.4.11 从 Anime tests/ 拷入（本地复制）；tests/test_main.cpp（DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 入口）+ test_point.cpp（3 用例）+ test_snack.cpp（8 用例：初始状态 / 四方向 move / grow 只打标记时序 / 长度>1 反向被拒 / 90° 允许）；CMakeLists 加 enable_testing + unit_tests target（tests + src/Point.cpp + src/Snack.cpp，**不含 main.cpp / UI.cpp**）+ add_test；编码参数抽成 SNACK_UTF8_FLAGS 变量供两 target 复用
 - [x] **单测全绿（2026-09-10）**：11 用例 / 16 断言全部通过，ctest --test-dir build 1/1 Passed（首轮跑就绿）
 - [x] **cmake/ctest 加入用户 PATH（2026-09-10）**：D:\Tool\CMake\...\bin，命令行可直接调用；**mingw64 故意不加 PATH**（避免工具链打架，CMake 配置里已显式指定编译器路径）
+- [x] **README 完成（2026-09-10）**：8 板块（简介/功能/ASCII 画面示意/操作表/技术栈/构建运行/项目结构/后续计划），棋盘示意图 34 字符精确对齐；ASCII 示意可后续换真截图。**工程化四件套（目录/CMake/单测/README）就此收官**
 
 ### 待办（下次严格按此顺序）
-- [ ] **提交推送（当前未提交！）**：CMakeLists.txt 改动 + tests/（doctest.h + 3 个测试文件）——本机校园网连不上 GitHub，试 Steam++ 或到主力机推
-- [ ] **README**（功能/构建/测试/结构，参考 Anime 已验证流程）——工程化最后一项
+- [ ] **提交推送 README**（唯一未提交项）；本机校园网连不上 GitHub → 开 Steam++ 或到主力机推（上午的单测提交 377f5e0 同样待推送确认）
 - [ ] **主力机交接**：pull 后别开 .sln（已退役），VS"打开文件夹"→ CMake（MSVC kit）；跑一次单测确认同样 11 用例 / 16 断言全绿
-- [ ] 可选小项：补"长度 1 时反向放行"用例（setDirection 规则第三分支）；GitHub Actions CI（ctest）；rand 换 `<random>`；读键封装成函数
-- [ ] 可选加分：SFML 图形版（游戏循环/事件/碰撞/存档）
+- [ ] **待决策：图形版（SFML）还是结项换项目**——先别写代码，二选一后开工：
+  - 路线①：**1 小时低成本试水**——主力机只验证"SFML 空窗口能编能跑"，不通过就停（项目已完整，零损失）
+  - 路线②：直接结项，转下一个项目
+  - 关键风险：**SFML 官方无 GCC 16 预编译包**，本机 MinGW 机 ABI 风险高 → 若做，走主力机 MSVC + 官方 VS2022 二进制最稳
+  - 备选玩法（结合 PAT 算法学习）：给现有项目加 **BFS 自动寻路 AI 模式**（机器自己找最短路径吃食物）
+- [ ] 可选小项：补"长度 1 时反向放行"用例（setDirection 规则第三分支）；GitHub Actions CI（ctest + README 徽章）；rand 换 `<random>`；读键封装成函数；真截图替换 ASCII 示意图
 
 ## 关键决定记录
 - 远程用 HTTPS：22 端口被墙，SSH 不可用
@@ -67,6 +71,8 @@
 - 单元测试用 **doctest**（单头文件、Anime 同款已验证）：unit_tests 是独立可执行文件，**只编被测源文件（src/Point.cpp + src/Snack.cpp）**，绝不含 src/main.cpp（main 冲突）与 UI.cpp（测试不画图）
 - 编码参数抽成 `SNACK_UTF8_FLAGS` 变量（set + ${} 取值），Snack 与 unit_tests 两个 target 复用同一份定义
 - cmake/ctest 加入用户 PATH；mingw64 不加 PATH（编译器路径在 CMake 配置时显式传，避免全局工具链冲突）
+- **图形版路线未定（2026-09-10 讨论）**：做 SFML 只需改"显示 + 输入"层——Snack / Point / 11 个单测**一行都不用动**（分层设计的回报）；但 SFML 官方无 GCC 16 预编译包，本机 MinGW 有 ABI 风险 → 若做，优先主力机 MSVC + 官方 VS2022 二进制；决策方式 = 先花 1 小时只验"空窗口能编能跑"，不通过就停（项目已完整，零损失）
+- **不做"算法可视化"类展示型项目**（2026-09-10）：用户的算法目标是 PAT / 竞赛，纯展示型项目对目标无收益；若要结合算法，优先在现有项目内加 **BFS 自动寻路 AI 模式**（备选，未决）
 - 踩坑库共享兄弟项目 Anime_Archive_Z（见下节），遇到类似问题直接引用
 
 ## 踩坑库（共享自 Anime_Archive_Z，教科书级，反复看）
