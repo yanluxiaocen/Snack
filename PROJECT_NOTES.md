@@ -3,7 +3,7 @@
 > 本文件是"跨设备共享记忆"：每台电脑/每个账户开工前先读它，收工后更新它，然后提交推送到 GitHub。
 
 ## 一句话简介
-控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环：自动移动/转向/成长/撞墙/**自撞/计分/R 重开**全部完成并验收；手感优化（不闪烁/场地 32×16/按键防排队）完成；工程化进行中：目录已拍平（src/include）、**sln 退役、CMake 构建管线跑通**（CMakeLists.txt 本人手写）；单元测试与 README 待做。
+控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环（自动移动/转向/成长/撞墙/自撞/计分/R 重开）+ 手感优化完成；工程化：目录拍平（src/include）、sln 退役、CMake 管线跑通、**doctest 单元测试接入（11 用例 / 16 断言全绿，ctest 通过）**；README 待做。
 
 ## 协作约定
 - VS2022 主力机 + 另一台电脑（VSCode）经 GitHub 协作，远程已统一为 HTTPS（22 端口被墙，SSH 不可用，勿折腾）。
@@ -38,12 +38,15 @@
 - [x] **目录拍平 + 退役 sln（2026-09-09）**：git mv 源码 → src/、头文件 → include/（tests/ 预建）；删除 Snack.sln / .vcxproj / .filters
 - [x] **CMake 接入（2026-09-09）**：CMakeLists.txt 本人手写（C++17 + 按编译器分编码参数：MSVC /utf-8、g++ -finput/-fexec-charset=UTF-8）；CMake 4.4.3 绿色版装 D:\Tool\CMake（winget 本机损坏、无外网直连，浏览器校园网下载）；cmake -G "MinGW Makefiles" 配置+构建 → build\Snack.exe 跑通（mingw64 不在 PATH → 显式 -DCMAKE_CXX_COMPILER/-DCMAKE_MAKE_PROGRAM）；F5 已接线（tasks 换 CMake 构建/首次配置，launch 指向 build\Snack.exe，任意文件可 F5）
 - [x] **本机整体验收（2026-09-09）**：CMake 产物运行正常、F5 调试流程正常
+- [x] **doctest 单元测试接入（2026-09-10）**：doctest.h 2.4.11 从 Anime tests/ 拷入（本地复制）；tests/test_main.cpp（DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN 入口）+ test_point.cpp（3 用例）+ test_snack.cpp（8 用例：初始状态 / 四方向 move / grow 只打标记时序 / 长度>1 反向被拒 / 90° 允许）；CMakeLists 加 enable_testing + unit_tests target（tests + src/Point.cpp + src/Snack.cpp，**不含 main.cpp / UI.cpp**）+ add_test；编码参数抽成 SNACK_UTF8_FLAGS 变量供两 target 复用
+- [x] **单测全绿（2026-09-10）**：11 用例 / 16 断言全部通过，ctest --test-dir build 1/1 Passed（首轮跑就绿）
+- [x] **cmake/ctest 加入用户 PATH（2026-09-10）**：D:\Tool\CMake\...\bin，命令行可直接调用；**mingw64 故意不加 PATH**（避免工具链打架，CMake 配置里已显式指定编译器路径）
 
 ### 待办（下次严格按此顺序）
-- [ ] **提交推送今天全部改动**（拍平/退役 sln/CMakeLists/.vscode 全部未提交！本机校园网连不上 GitHub，试 Steam++，不行就带到主力机推）
-- [ ] **主力机交接（大改）**：pull 后注意 **sln/vcxproj 已退役，别开 .sln**；用 VS"打开文件夹"指向仓库根 → VS 自动走 CMake（MSVC kit，/utf-8 由 CMakeLists 统一处理，原"Release /utf-8 小尾巴"自动作废）；首次需 configure
-- [ ] doctest 单元测试（tests/ 已建）：Point/Snack 用例（doctest.h 从 Anime tests/ 拷，参考它的 add_executable + ctest 接法）
-- [ ] README（功能/构建说明，参考 Anime 已验证流程）
+- [ ] **提交推送（当前未提交！）**：CMakeLists.txt 改动 + tests/（doctest.h + 3 个测试文件）——本机校园网连不上 GitHub，试 Steam++ 或到主力机推
+- [ ] **README**（功能/构建/测试/结构，参考 Anime 已验证流程）——工程化最后一项
+- [ ] **主力机交接**：pull 后别开 .sln（已退役），VS"打开文件夹"→ CMake（MSVC kit）；跑一次单测确认同样 11 用例 / 16 断言全绿
+- [ ] 可选小项：补"长度 1 时反向放行"用例（setDirection 规则第三分支）；GitHub Actions CI（ctest）；rand 换 `<random>`；读键封装成函数
 - [ ] 可选加分：SFML 图形版（游戏循环/事件/碰撞/存档）
 
 ## 关键决定记录
@@ -61,6 +64,9 @@
 - mingw64 与 cmake 都不在 PATH → cmake 配置显式传 -DCMAKE_CXX_COMPILER / -DCMAKE_MAKE_PROGRAM（Anime 坑 #14 同款：工具不在 PATH）
 - .vscode 配置含本机绝对路径（D:\Tool\CMake、D:\Tool\VSCode\mingw64），主力机不用 .vscode，无冲突
 - build/ 产物目录 gitignore；Snack.exe 不再生成在源码目录
+- 单元测试用 **doctest**（单头文件、Anime 同款已验证）：unit_tests 是独立可执行文件，**只编被测源文件（src/Point.cpp + src/Snack.cpp）**，绝不含 src/main.cpp（main 冲突）与 UI.cpp（测试不画图）
+- 编码参数抽成 `SNACK_UTF8_FLAGS` 变量（set + ${} 取值），Snack 与 unit_tests 两个 target 复用同一份定义
+- cmake/ctest 加入用户 PATH；mingw64 不加 PATH（编译器路径在 CMake 配置时显式传，避免全局工具链冲突）
 - 踩坑库共享兄弟项目 Anime_Archive_Z（见下节），遇到类似问题直接引用
 
 ## 踩坑库（共享自 Anime_Archive_Z，教科书级，反复看）
@@ -80,6 +86,13 @@
 14. 抄 CMakeLists 忘改 target 名（把 Anime_Archive_Z 抄进 Snack）→ target_compile_options 指向不存在的 target 报错
 15. build 目录 CMakeCache.txt 丢失 → cmake --build 报 "not a CMake build directory" → 重跑一次配置即可
 16. winget 在本机损坏（命令返回负数退出码、--version 也无输出）→ 备用方案：浏览器直接下绿色版解压（不用装系统）
+17. **`enum class` 不能从 int 构造**：`Direction(0)` 编译错，必须写 `Direction::Up`（强类型的代价，也是它的价值——魔法数字写不进来）
+18. **容器对象不能和 int 比较**：`s.getBody() == 1` 编译错，要比长度得 `.size()`（返回的是 deque 本身，不是个数）
+19. **C++17 里 `x != y` 需要显式 `operator!=`**（"有 == 就自动有 !="是 C++20 特性）→ 测试里写 `CHECK_FALSE(x == y)`；原则：测试适应接口，别为测试改接口
+20. **CMake 文件名拼错** → `Cannot find source file: tests/tests_main.cpp`（本次多打一个 s）；报这类错先核对文件名与目录
+21. **CMake 未定义变量 `${XXX}` 静默展开为空** → target 少配置且不报错（本次 SNACK_UTF8_FLAGS 忘了 set，unit_tests 就漏了编码参数）；写 `${}` 前先确认对应 `set()` 存在
+22. **单元测试 target 混入含 main() 的源文件** → 重复定义 main、链接失败（doctest 自己提供 main）
+23. **PowerShell 终端显示中文乱码** → `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`（注意与 #11 区分：#11 是程序内输出编码，这条是终端显示编码）
 
 ## 知识点地图（2026-09-08 小结，供复习/面试用，详细版在当天聊天里）
 **C++ 语言**：constexpr（类型化编译期常量，不用 #define——宏无类型/无作用域/不可调试）；enum class（作用域+强类型，打印用 static_cast）；声明 vs 定义（链接错误 undefined reference）；运算符重载 operator==；初始化列表按声明顺序；const 成员函数；const& 返回防拷贝（getBody）
@@ -88,6 +101,7 @@
 **Windows 控制台**：_getch 无回车读键；_kbhit 非阻塞轮询（实时游戏必须用）；方向键两字节（0/224 前缀 + 72↑ 75← 77→ 80↓）；Sleep 毫秒延时；system("cls") 清屏；SetConsoleOutputCP(CP_UTF8) 解决中文乱码
 **随机数**：rand 伪随机（LCG 确定性序列）→ srand(time(nullptr)) 播种；rand()%N+1 压范围（有微小取模偏差）；工程化换 <random>（mt19937 + uniform_int_distribution）
 **设计思想**：游戏主循环骨架（输入→更新→渲染→延时，所有游戏通用）；状态与显示分离（分数/食物在 main，UI 只读画）；成长标志"先标记、move 里消化"；规则按游戏状态分级（长度1 可掉头 / >1 禁止）；生成合法性过滤（食物不压蛇身）；增量开发每步有验收
+**测试与构建（2026-09-10 补充）**：doctest 三件套（`TEST_CASE` / `CHECK` / `CHECK_FALSE`，`REQUIRE` 失败即中止）；AAA 三段式（准备→动作→断言）与"用例互相独立"原则；doctest 参数 `--success` / `-tc="名字"` / `--list-test-cases`；ctest 批量 `--test-dir build --output-on-failure`；CMake `enable_testing` / `add_test` / `set` 变量 + `${}` 复用；单元测试 target 只编被测源文件（不含 main）
 
 ## 常用命令备忘
 - 结束一天：更新本文件 → git add -A → git commit -m "docs: 更新项目日志" → git push
@@ -95,4 +109,7 @@
 - 新电脑首次拉取：git clone https://github.com/yanluxiaocen/Snack.git
 - 每日开工：git pull 拿到最新进度，先读 PROJECT_NOTES.md
 - VSCode 机编译/调试：**F5** = `CMake: 构建` 任务 + 启动 build\Snack.exe（任意文件上 F5 均可）；新机器/删了 build 目录先跑任务 `CMake: 首次配置`
-- VSCode 机手动构建：cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=D:/Tool/VSCode/mingw64/bin/g++.exe -DCMAKE_MAKE_PROGRAM=D:/Tool/VSCode/mingw64/bin/mingw32-make.exe，然后 cmake --build build（cmake 全路径 D:/Tool/CMake/cmake-4.4.3-windows-x86_64/bin/cmake.exe）
+- VSCode 机手动构建：cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=D:/Tool/VSCode/mingw64/bin/g++.exe -DCMAKE_MAKE_PROGRAM=D:/Tool/VSCode/mingw64/bin/mingw32-make.exe，然后 cmake --build build（cmake/ctest 已于 2026-09-10 加入用户 PATH，可直接敲）
+- 跑单测（详细输出，日常）：`.\build\unit_tests.exe`（可加 --success 看通过项、-tc="Snack：grow*" 只跑匹配用例、--list-test-cases 列用例）
+- 跑单测（批量/CI 用）：`ctest --test-dir build --output-on-failure`
+- 终端看中文测试名先敲：`[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`
