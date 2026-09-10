@@ -3,7 +3,7 @@
 > 本文件是"跨设备共享记忆"：每台电脑/每个账户开工前先读它，收工后更新它，然后提交推送到 GitHub。
 
 ## 一句话简介
-控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环（自动移动/转向/成长/撞墙/自撞/计分/R 重开）+ 手感优化完成；**工程化四件套齐活**：目录拍平（src/include）→ sln 退役 → CMake 管线 → doctest 单测（11 用例 / 16 断言全绿）→ README。**图形版（SFML）路线待定**，见待办决策项。
+控制台贪吃蛇（C++ / STL，**CMake 双机构建**，简历向项目）。游戏规则已闭环（自动移动/转向/成长/撞墙/自撞/计分/R 重开）+ 手感优化完成；**工程化四件套齐活**：目录拍平（src/include）→ sln 退役 → CMake 管线 → doctest 单测（11 用例 / 16 断言全绿）→ README；**BFS 自动寻路 AI（阶段 0+1）完成**——按 E 可让蛇自己追食物。**防自困（阶段 3）与图形版（SFML）决策待办**。
 
 ## 协作约定
 - VS2022 主力机 + 另一台电脑（VSCode）经 GitHub 协作，远程已统一为 HTTPS（22 端口被墙，SSH 不可用，勿折腾）。
@@ -42,16 +42,18 @@
 - [x] **单测全绿（2026-09-10）**：11 用例 / 16 断言全部通过，ctest --test-dir build 1/1 Passed（首轮跑就绿）
 - [x] **cmake/ctest 加入用户 PATH（2026-09-10）**：D:\Tool\CMake\...\bin，命令行可直接调用；**mingw64 故意不加 PATH**（避免工具链打架，CMake 配置里已显式指定编译器路径）
 - [x] **README 完成（2026-09-10）**：8 板块（简介/功能/ASCII 画面示意/操作表/技术栈/构建运行/项目结构/后续计划），棋盘示意图 34 字符精确对齐；ASCII 示意可后续换真截图。**工程化四件套（目录/CMake/单测/README）就此收官**
+- [x] **BFS 自动寻路 AI 阶段 0+1（2026-09-10）**：新增 include/AutoPilot.h + src/AutoPilot.cpp（纯函数 `nextDirection(snake, food, w, h)`）；网格 BFS（blocked 障碍表＝蛇身除尾巴、visited 访问表、parent 父节点表回溯路径、DX/DY 数组下标与 Direction 数值对齐）；main 加按 **E** 切换手动/AI，AI 模式下忽略键盘方向；Snack / Point / 11 个单测**零改动**（分层红利）。实机验收：蛇能自己转向追食物、吃到计分变长；**终会把自己困死＝纯 BFS 的已知局限**（阶段 3 治）
 
 ### 待办（下次严格按此顺序）
-- [ ] **提交推送 README**（唯一未提交项）；本机校园网连不上 GitHub → 开 Steam++ 或到主力机推（上午的单测提交 377f5e0 同样待推送确认）
+- [ ] **提交推送 AutoPilot 四处改动**（CMakeLists.txt / src/main.cpp / include/AutoPilot.h / src/AutoPilot.cpp，**换机前必做**）——本机校园网连不上 GitHub，开 Steam++ 或到主力机推
 - [ ] **主力机交接**：pull 后别开 .sln（已退役），VS"打开文件夹"→ CMake（MSVC kit）；跑一次单测确认同样 11 用例 / 16 断言全绿
-- [ ] **待决策：图形版（SFML）还是结项换项目**——先别写代码，二选一后开工：
+- [ ] **AI 阶段 2：给 BFS 加单测**（AutoPilot.cpp 加进 unit_tests target；用例：直线追食物、绕开自身障碍、食物被围死时返回原方向）——纯函数，最好测
+- [ ] **AI 阶段 3：防自困**（难点，也是最有意思的部分）——虚拟走一步后用 BFS/洪水填充检查"新头到尾巴是否仍可达"；不可达就放弃该食物、转成追尾绕圈保命，蛇才能长到几十节
+- [ ] **待决策：图形版（SFML）还是结项换项目**（先别写代码，二选一后开工）：
   - 路线①：**1 小时低成本试水**——主力机只验证"SFML 空窗口能编能跑"，不通过就停（项目已完整，零损失）
   - 路线②：直接结项，转下一个项目
-  - 关键风险：**SFML 官方无 GCC 16 预编译包**，本机 MinGW 机 ABI 风险高 → 若做，走主力机 MSVC + 官方 VS2022 二进制最稳
-  - 备选玩法（结合 PAT 算法学习）：给现有项目加 **BFS 自动寻路 AI 模式**（机器自己找最短路径吃食物）
-- [ ] 可选小项：补"长度 1 时反向放行"用例（setDirection 规则第三分支）；GitHub Actions CI（ctest + README 徽章）；rand 换 `<random>`；读键封装成函数；真截图替换 ASCII 示意图
+  - 关键风险：**SFML 官方无 GCC 16 预编译包**，本机 MinGW ABI 风险高 → 若做，走主力机 MSVC + 官方 VS2022 二进制最稳
+- [ ] 可选小项：补"长度 1 时反向放行"用例；GitHub Actions CI（ctest + README 徽章）；rand 换 `<random>`；读键封装成函数；真截图替换 ASCII 示意图；draw 里显示当前模式（手动/AI）
 
 ## 关键决定记录
 - 远程用 HTTPS：22 端口被墙，SSH 不可用
@@ -72,7 +74,10 @@
 - 编码参数抽成 `SNACK_UTF8_FLAGS` 变量（set + ${} 取值），Snack 与 unit_tests 两个 target 复用同一份定义
 - cmake/ctest 加入用户 PATH；mingw64 不加 PATH（编译器路径在 CMake 配置时显式传，避免全局工具链冲突）
 - **图形版路线未定（2026-09-10 讨论）**：做 SFML 只需改"显示 + 输入"层——Snack / Point / 11 个单测**一行都不用动**（分层设计的回报）；但 SFML 官方无 GCC 16 预编译包，本机 MinGW 有 ABI 风险 → 若做，优先主力机 MSVC + 官方 VS2022 二进制；决策方式 = 先花 1 小时只验"空窗口能编能跑"，不通过就停（项目已完整，零损失）
-- **不做"算法可视化"类展示型项目**（2026-09-10）：用户的算法目标是 PAT / 竞赛，纯展示型项目对目标无收益；若要结合算法，优先在现有项目内加 **BFS 自动寻路 AI 模式**（备选，未决）
+- **不做"算法可视化"类展示型项目**（2026-09-10）：用户的算法目标是 PAT / 竞赛，纯展示型项目对目标无收益；若要结合算法，优先在现有项目内加 **BFS 自动寻路 AI 模式**（已在做）
+- **AI 自动寻路独立成模块（AutoPilot）而非塞进 Snack**（2026-09-10）：Snack 保持"纯游戏规则"，AI 是**纯函数**（输入蛇+食物 → 输出方向）→ 天生可单测、可替换策略（贪心 BFS / 追尾 / 更长远的规划）；这也是分层设计的回报：AI 上线时 Snack/Point/11 个单测零改动
+- **BFS 实现细节决定**（2026-09-10）：障碍表＝蛇身**除尾巴**（下一步尾巴让位，当墙会误判无路）；`DX/DY` 数组下标与 `Direction` 数值对齐（Up=0/Right=1/Down=2/Left=3）→ 可直接 `static_cast<Direction>(d)`；食物不可达时**维持当前方向**（保底策略）
+- **已知局限与演进方向**：纯 BFS＝贪心最短路，不评估"吃完还能不能活"→ 蛇越长越容易自困；阶段 3 方案＝虚拟走一步 + BFS/洪水填充检查"新头到尾巴可达性"，不可达则追尾绕圈保命
 - 踩坑库共享兄弟项目 Anime_Archive_Z（见下节），遇到类似问题直接引用
 
 ## 踩坑库（共享自 Anime_Archive_Z，教科书级，反复看）
@@ -99,6 +104,9 @@
 21. **CMake 未定义变量 `${XXX}` 静默展开为空** → target 少配置且不报错（本次 SNACK_UTF8_FLAGS 忘了 set，unit_tests 就漏了编码参数）；写 `${}` 前先确认对应 `set()` 存在
 22. **单元测试 target 混入含 main() 的源文件** → 重复定义 main、链接失败（doctest 自己提供 main）
 23. **PowerShell 终端显示中文乱码** → `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`（注意与 #11 区分：#11 是程序内输出编码，这条是终端显示编码）
+24. **函数定义必须和声明逐字一致**：头文件写 `const Point &food`（引用）、.cpp 却写 `const Point food`（按值）→ 编译器视作**两个不同重载**，引用版"有声明没定义" → 链接报 `undefined reference`；编译器只在 warning 里透露线索（签名为 `Point` 而非 `Point const&`）
+25. **vexing parse**：`Point cur = 1, front();` 能编过但行为全错——`front()` 被当成函数声明、`= 1` 被隐式转成 `Point(1,0)`；看到 warning "empty parentheses were disambiguated as a function declaration" 就是它（正确写法 `Point cur = q.front();`）
+26. **新增源文件忘了加进 `add_executable`** → 只编了部分文件 → 调用新函数报 `undefined reference`（本次 AutoPilot.cpp：文件在、头文件在，就是没列进 CMakeLists）；排查时看构建日志有没有 `Building CXX object .../AutoPilot.cpp.obj` 这一行最直接
 
 ## 知识点地图（2026-09-08 小结，供复习/面试用，详细版在当天聊天里）
 **C++ 语言**：constexpr（类型化编译期常量，不用 #define——宏无类型/无作用域/不可调试）；enum class（作用域+强类型，打印用 static_cast）；声明 vs 定义（链接错误 undefined reference）；运算符重载 operator==；初始化列表按声明顺序；const 成员函数；const& 返回防拷贝（getBody）
@@ -108,6 +116,7 @@
 **随机数**：rand 伪随机（LCG 确定性序列）→ srand(time(nullptr)) 播种；rand()%N+1 压范围（有微小取模偏差）；工程化换 <random>（mt19937 + uniform_int_distribution）
 **设计思想**：游戏主循环骨架（输入→更新→渲染→延时，所有游戏通用）；状态与显示分离（分数/食物在 main，UI 只读画）；成长标志"先标记、move 里消化"；规则按游戏状态分级（长度1 可掉头 / >1 禁止）；生成合法性过滤（食物不压蛇身）；增量开发每步有验收
 **测试与构建（2026-09-10 补充）**：doctest 三件套（`TEST_CASE` / `CHECK` / `CHECK_FALSE`，`REQUIRE` 失败即中止）；AAA 三段式（准备→动作→断言）与"用例互相独立"原则；doctest 参数 `--success` / `-tc="名字"` / `--list-test-cases`；ctest 批量 `--test-dir build --output-on-failure`；CMake `enable_testing` / `add_test` / `set` 变量 + `${}` 复用；单元测试 target 只编被测源文件（不含 main）
+**算法（2026-09-10 补充，与 PAT 直接相关）**：网格 BFS（`queue` + `visited` + **父节点表回溯路径**）；障碍建模（蛇身除尾）；`DX/DY` 方向数组与枚举数值对齐技巧；**贪心最短路的局限**——只看当下最优解会把自己困死，需要"可达性检查/洪水填充"这类安全性评估；下一步：BFS 洪水填充判连通性 + 追尾保命策略
 
 ## 常用命令备忘
 - 结束一天：更新本文件 → git add -A → git commit -m "docs: 更新项目日志" → git push

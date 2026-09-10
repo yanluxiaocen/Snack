@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "Snack.h"
 #include "UI.h"
+#include "AutoPilot.h"
 
 using namespace std;
 constexpr int STEP_DELAY_MS = 150;
@@ -41,6 +42,7 @@ int main()
 		Point food = makeFood(snake);
 
 		bool gameOver = false;
+		bool autoMode = false;
 		while (!gameOver)
 		{
 			if (_kbhit())
@@ -76,15 +78,21 @@ int main()
 				case 77:
 					dir = Direction::Right;
 					break;
+				case 'e':
+				case 'E':
+					autoMode = !autoMode;
+					continue;
 				case 'q':
 				case 'Q':
 					return 0;
 				default:
 					continue;
 				}
-				snake.setDirection(dir);
+				if (!autoMode)
+					snake.setDirection(dir);
 			}
-
+			if (autoMode)
+				snake.setDirection(nextDirection(snake, food, PLAY_WIDTH, PLAY_HEIGHT));
 			snake.move();
 
 			Point head = snake.getBody().front();

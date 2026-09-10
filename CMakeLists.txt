@@ -8,7 +8,9 @@ add_executable(Snack
 src/main.cpp
 src/Point.cpp
 src/Snack.cpp
-src/UI.cpp)
+src/UI.cpp
+src/AutoPilot.cpp
+)
 
 target_include_directories(Snack PRIVATE include)
 
