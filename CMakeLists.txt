@@ -19,8 +19,10 @@ add_executable(unit_tests
 tests/test_main.cpp
 tests/test_point.cpp
 tests/test_snack.cpp
+tests/test_autopilot.cpp
 src/Point.cpp
 src/Snack.cpp
+src/AutoPilot.cpp
 )
 target_include_directories(unit_tests PRIVATE include tests)
 add_test(NAME unit_tests COMMAND unit_tests)
@@ -34,3 +36,13 @@ endif()
 
 target_compile_options(Snack PRIVATE ${SNACK_UTF8_FLAGS})
 target_compile_options(unit_tests PRIVATE ${SNACK_UTF8_FLAGS})
+
+# 编译警告：GCC/Clang 用 -Wall -Wextra，MSVC 用 /W4
+if(MSVC)
+    set(SNACK_WARN_FLAGS /W4)
+else()
+    set(SNACK_WARN_FLAGS -Wall -Wextra)
+endif()
+
+target_compile_options(Snack PRIVATE ${SNACK_WARN_FLAGS})
+target_compile_options(unit_tests PRIVATE ${SNACK_WARN_FLAGS})

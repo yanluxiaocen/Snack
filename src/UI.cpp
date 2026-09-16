@@ -20,7 +20,7 @@ void draw(const Snack &snake, const Point &food, int score)
     COORD topLeft = {0, 0};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), topLeft);
 
-    cout << "WASD/方向键 转向 · Q 退出" << endl;
+    cout << "分数：" << score << "   WASD/方向键 转向 · Q 退出" << endl;
     for (int y = 0; y < PLAY_HEIGHT + 2; ++y)
     {
         for (int x = 0; x < PLAY_WIDTH + 2; ++x)

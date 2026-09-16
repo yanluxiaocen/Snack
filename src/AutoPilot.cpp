@@ -7,27 +7,20 @@ using namespace std;
 static const int DX[4] = {0, 1, 0, -1};
 static const int DY[4] = {-1, 0, 1, 0};
 
-Direction nextDirection(const Snack &snake, const Point &food, int width, int height)
+static bool bfsFirstStep(const vector<vector<bool>> &blocked, Point start, Point goal, int width, int height, Point &outStep)
 {
-    Point head = snake.getBody().front();
-
-    vector<vector<bool>> blocked(height + 2, vector<bool>(width + 2, false));
-    const auto &body = snake.getBody();
-    for (size_t i = 0; i < body.size(); ++i)
+    if (start == goal)
     {
-        if (i == body.size() - 1)
-            continue;
-        if (i == 0)
-            continue;
-        blocked[body[i].y][body[i].x] = true;
+        outStep = start;
+        return true;
     }
 
     vector<vector<bool>> visited(height + 2, vector<bool>(width + 2, false));
     vector<vector<Point>> parent(height + 2, vector<Point>(width + 2, Point(-1, -1)));
     queue<Point> q;
 
-    visited[head.y][head.x] = true;
-    q.push(head);
+    visited[start.y][start.x] = true;
+    q.push(start);
     bool found = false;
 
     while (!q.empty())
@@ -35,7 +28,7 @@ Direction nextDirection(const Snack &snake, const Point &food, int width, int he
         Point cur = q.front();
         q.pop();
 
-        if (cur == food)
+        if (cur == goal)
         {
             found = true;
             break;
@@ -58,17 +51,62 @@ Direction nextDirection(const Snack &snake, const Point &food, int width, int he
     }
 
     if (!found)
-        return snake.getDirection();
+        return false;
 
-    Point step = food;
-    while (!(parent[step.y][step.x] == head))
-        step = parent[step.y][step.x];
+    Point cur = goal;
+    while (!(parent[cur.y][cur.x] == start))
+        cur = parent[cur.y][cur.x];
 
-    int dx = step.x - head.x;
-    int dy = step.y - head.y;
+    outStep = cur;
+    return true;
+}
+
+static vector<vector<bool>> buildBlocked(const deque<Point> &body, int width, int height)
+{
+    vector<vector<bool>> blocked(height + 2, vector<bool>(width + 2, false));
+    for (size_t i = 0; i < body.size(); ++i)
+    {
+        if (i == body.size() - 1)
+            continue;
+        if (i == 0)
+            continue;
+        blocked[body[i].y][body[i].x] = true;
+    }
+    return blocked;
+}
+
+static Direction stepToDirection(Point from, Point to, Direction fallback)
+{
+    int dx = to.x - from.x;
+    int dy = to.y - from.y;
     for (int d = 0; d < 4; ++d)
         if (DX[d] == dx && DY[d] == dy)
             return static_cast<Direction>(d);
+    return fallback;
+}
 
+Direction nextDirection(const Snack &snake, const Point &food, int width, int height)
+{
+    Point head = snake.getBody().front();
+    Point step = food;
+    if (bfsFirstStep(buildBlocked(snake.getBody(), width, height), head, food, width, height, step))
+    {
+        return stepToDirection(head, step, snake.getDirection());
+    }
     return snake.getDirection();
+}
+
+static bool isMoveSafe(const deque<Point> &body, Point newHead, bool willGrow, int width, int height)
+{
+    deque<Point> after;
+    after.push_front(newHead);
+    size_t keep = willGrow ? body.size() : body.size() - 1;
+    for (size_t i = 0; i < keep; i++)
+        after.push_back(body[i]);
+
+    Point newTail = after.back();
+
+    vector<vector<bool>> afterBlocked = buildBlocked(after, width, height);
+    Point dummy;
+    return bfsFirstStep(afterBlocked, newHead, newTail, width, height, dummy);
 }
