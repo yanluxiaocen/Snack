@@ -39,6 +39,7 @@ int main()
 	{
 		Snack snake(PLAY_WIDTH / 2, PLAY_HEIGHT / 2);
 		int score = 0;
+		int stepSinceEat = 0;
 		Point food = makeFood(snake);
 
 		bool gameOver = false;
@@ -92,7 +93,7 @@ int main()
 					snake.setDirection(dir);
 			}
 			if (autoMode)
-				snake.setDirection(nextDirection(snake, food, PLAY_WIDTH, PLAY_HEIGHT));
+				snake.setDirection(nextDirection(snake, food, PLAY_WIDTH, PLAY_HEIGHT, stepSinceEat));
 			snake.move();
 
 			Point head = snake.getBody().front();
@@ -116,7 +117,10 @@ int main()
 				snake.grow();
 				++score;
 				food = makeFood(snake);
+				stepSinceEat = 0;
 			}
+			else
+				++stepSinceEat;
 
 			draw(snake, food, score);
 			Sleep(STEP_DELAY_MS);

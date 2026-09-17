@@ -1,5 +1,4 @@
 #pragma once
-#include"Snack.h"
+#include "Snack.h"
 
-Direction nextDirection(const Snack &snake, const Point &food, int width, int height);
-
+Direction nextDirection(const Snack &snake, const Point &food, int width, int height, int stepsSinceEat = 0);

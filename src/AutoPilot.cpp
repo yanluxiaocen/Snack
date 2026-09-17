@@ -1,19 +1,19 @@
 #include "AutoPilot.h"
 #include <queue>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
 static const int DX[4] = {0, 1, 0, -1};
 static const int DY[4] = {-1, 0, 1, 0};
+constexpr int HUNGER_LIMIT = 80;
 
-static bool bfsFirstStep(const vector<vector<bool>> &blocked, Point start, Point goal, int width, int height, Point &outStep)
+static bool bfsPath(const vector<vector<bool>> &blocked, Point start, Point goal, int width, int height, vector<Point> &path)
 {
+    path.clear();
     if (start == goal)
-    {
-        outStep = start;
         return true;
-    }
 
     vector<vector<bool>> visited(height + 2, vector<bool>(width + 2, false));
     vector<vector<Point>> parent(height + 2, vector<Point>(width + 2, Point(-1, -1)));
@@ -54,10 +54,22 @@ static bool bfsFirstStep(const vector<vector<bool>> &blocked, Point start, Point
         return false;
 
     Point cur = goal;
-    while (!(parent[cur.y][cur.x] == start))
+    while (!(cur == start))
+    {
+        path.push_back(cur);
         cur = parent[cur.y][cur.x];
+    }
+    reverse(path.begin(), path.end());
+    return true;
+}
 
-    outStep = cur;
+static bool bfsFirstStep(const vector<vector<bool>> &blocked, Point start, Point goal, int width, int height, Point &outStep)
+{
+    vector<Point> path;
+
+    if (!bfsPath(blocked, start, goal, width, height, path))
+        return false;
+    outStep = path.empty() ? start : path.front();
     return true;
 }
 
@@ -85,28 +97,49 @@ static Direction stepToDirection(Point from, Point to, Direction fallback)
     return fallback;
 }
 
-Direction nextDirection(const Snack &snake, const Point &food, int width, int height)
+static deque<Point> simulateWalk(const deque<Point> &body, const vector<Point> &path, const Point &food)
 {
-    Point head = snake.getBody().front();
-    Point step = food;
-    if (bfsFirstStep(buildBlocked(snake.getBody(), width, height), head, food, width, height, step))
+    deque<Point> after = body;
+    for (const Point &cell : path)
     {
-        return stepToDirection(head, step, snake.getDirection());
+        bool willGrow = (cell == food);
+        after.push_front(cell);
+        if (!willGrow)
+            after.pop_back();
     }
-    return snake.getDirection();
+    return after;
 }
 
-static bool isMoveSafe(const deque<Point> &body, Point newHead, bool willGrow, int width, int height)
+static bool isPathSafe(const deque<Point> &body, const vector<Point> &path, const Point &food, int width, int height)
 {
-    deque<Point> after;
-    after.push_front(newHead);
-    size_t keep = willGrow ? body.size() : body.size() - 1;
-    for (size_t i = 0; i < keep; i++)
-        after.push_back(body[i]);
+    if (path.empty())
+        return true;
 
+    deque<Point> after = simulateWalk(body, path, food);
+    Point newHead = after.front();
     Point newTail = after.back();
-
     vector<vector<bool>> afterBlocked = buildBlocked(after, width, height);
+
     Point dummy;
     return bfsFirstStep(afterBlocked, newHead, newTail, width, height, dummy);
+}
+
+Direction nextDirection(const Snack &snake, const Point &food, int width, int height, int stepsSinceEat)
+{
+    const auto &body = snake.getBody();
+    Point head = body.front();
+    vector<vector<bool>> blocked = buildBlocked(body, width, height);
+
+    vector<Point> path;
+    if (bfsPath(blocked, head, food, width, height, path) && !path.empty())
+    {
+        bool safe = isPathSafe(body, path, food, width, height);
+        if (safe || stepsSinceEat > HUNGER_LIMIT)
+            return stepToDirection(head, path.front(), snake.getDirection());
+    }
+
+    Point step;
+    if (bfsFirstStep(blocked, head, body.back(), width, height, step))
+        return stepToDirection(head, step, snake.getDirection());
+    return snake.getDirection();
 }
