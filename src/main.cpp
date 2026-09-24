@@ -8,7 +8,9 @@
 #include "AutoPilot.h"
 
 using namespace std;
-constexpr int STEP_DELAY_MS = 150;
+
+constexpr int STEP_DELAY_NORMAL_MS = 150;
+constexpr int STEP_DELAY_FAST_MS = 15;
 
 bool isOnSnake(const Snack &snake, const Point &pos)
 {
@@ -35,6 +37,7 @@ int main()
 	SetConsoleCP(CP_UTF8);
 	srand((unsigned)time(nullptr));
 
+	bool fastMode = false;
 	while (true)
 	{
 		Snack snake(PLAY_WIDTH / 2, PLAY_HEIGHT / 2);
@@ -83,6 +86,10 @@ int main()
 				case 'E':
 					autoMode = !autoMode;
 					continue;
+				case 'f':
+				case 'F':
+					fastMode = !fastMode;
+					continue;
 				case 'q':
 				case 'Q':
 					return 0;
@@ -123,7 +130,7 @@ int main()
 				++stepSinceEat;
 
 			draw(snake, food, score);
-			Sleep(STEP_DELAY_MS);
+			Sleep(fastMode ? STEP_DELAY_FAST_MS : STEP_DELAY_NORMAL_MS);
 		}
 
 		std::cout << "你寄了，得分：" << score << endl;
